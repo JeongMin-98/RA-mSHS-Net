@@ -11,17 +11,17 @@ from __future__ import print_function
 import os
 
 from yacs.config import CfgNode as CN
-# from .model import MODEL_EXTRAS
 from .model_cfg import MODEL_EXTRAS
 
 _C = CN()
 
 _C.DATA_DIR = ''
-_C.OUTPUT_DIR = ''
-_C.LOG_DIR = ''
+_C.OUTPUT_DIR = 'output'
+_C.LOG_DIR = 'log'
 _C.GPUS = 0
 _C.WORKERS = 4
 _C.PHASE = 'train'
+_C.RANK = 0
 
 # Cudnn related params
 _C.CUDNN = CN()
@@ -31,19 +31,24 @@ _C.CUDNN.ENABLED = True
 
 # common params for NETWORK
 _C.MODEL = CN()
-_C.MODEL.NAME = 'FCN'
+_C.MODEL.NAME = 'pose_resnet'
 _C.MODEL.EXTRA = MODEL_EXTRAS[_C.MODEL.NAME]
 _C.MODEL.INIT_WEIGHTS = True
 _C.MODEL.PRETRAINED = ''
+_C.MODEL.NUM_JOINTS = 17
+_C.MODEL.IMAGE_SIZE = [384, 288]  # width * height, ex: 192 * 256
 
 # if you want to add new params for NETWORK, Init new Params below!
 
 # DATASET related params
 _C.DATASET = CN()
 _C.DATASET.ROOT = ''
+_C.DATASET.DATASET = 'coco'
 _C.DATASET.TRAIN_SET = 'train'
 _C.DATASET.TEST_SET = 'valid'
 _C.DATASET.DATA_FORMAT = 'jpg'
+_C.DATASET.HYBRID_JOINTS_TYPE = ''
+_C.DATASET.SELECT_DATA = False
 
 # training data augmentation
 # Implement your data augmentation
@@ -71,6 +76,9 @@ _C.TRAIN.CHECKPOINT = ''
 _C.TRAIN.BATCH_SIZE_PER_GPU = 32
 _C.TRAIN.SHUFFLE = True
 
+# JSON
+_C.TRAIN.COCO_FILE = ''
+
 # testing
 _C.TEST = CN()
 
@@ -80,7 +88,10 @@ _C.TEST.BATCH_SIZE_PER_GPU = 32
 # debug
 _C.DEBUG = CN()
 _C.DEBUG.DEBUG = False
-
+_C.DEBUG.SAVE_BATCH_IMAGES_GT = False
+_C.DEBUG.SAVE_BATCH_IMAGES_PRED = False
+_C.DEBUG.SAVE_HEATMAPS_GT = False
+_C.DEBUG.SAVE_HEATMAPS_PRED = False
 
 def update_config(cfg, args):
     cfg.defrost()
@@ -114,6 +125,6 @@ def update_config(cfg, args):
 
 if __name__ == '__main__':
     import sys
-
+    
     with open(sys.argv[1], 'w') as f:
         print(_C, file=f)

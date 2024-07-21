@@ -1,5 +1,8 @@
 import torch
 import os, re
+import logging
+import time
+from pathlib import Path
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -77,74 +80,46 @@ def reduce_loss(tmp):
     loss = tmp
     return loss
 
+""" Logger """
+def create_logger(cfg, cfg_name, phase='train'):
+    root_output_dir = Path(cfg.OUTPUT_DIR)
+    # set up logger
+    if not root_output_dir.exists():
+        print("=> creating {}".format(root_output_dir))
+        root_output_dir.mkdir()
+    dataset = cfg.DATASET.DATASET + "_" + cfg.DATASET.HYBRID_JOINTS_TYPE \
+        if cfg.DATASET.HYBRID_JOINTS_TYPE else cfg.DATASET.DATASET
+    
+    dataset = dataset.replace(":", "_")
+    
+    model = cfg.MODEL.NAME
+    cfg_name = os.path.basename(cfg_name).split('.')[0]
+    
+    final_output_dir = root_output_dir / dataset / model / cfg_name
+    
+    if cfg.RANK == 0:
+        print("=> creating {}", format(final_output_dir))
+        final_output_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        pass
+    
+    time_str = time.strftime('%Y-%m-%d-%H-%M')
+    log_file = '{}_{}_{}.log'.format(cfg_name, time_str, phase)
+    final_log_file = final_output_dir / log_file
+    head = '%(asctime)-15s %(message)s'
+    logging.basicConfig(filename=str(final_log_file),
+                        format=head)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    console = logging.StreamHandler()
+    logging.getLogger('').addHandler(console)
 
-# def reduce_loss_dict(loss_dict):
-#     world_size = get_world_size()
-#
-#     if world_size < 2:
-#         return loss_dict
-#
-#     with torch.no_grad():
-#         keys = []
-#         losses = []
-#
-#         for k in sorted(loss_dict.keys()):
-#             keys.append(k)
-#             losses.append(loss_dict[k])
-#
-#         losses = torch.stack(losses, 0)
-#         dist.reduce(losses, dst=0)
-#
-#         if dist.get_rank() == 0:
-#             losses /= world_size
-#
-#         reduced_losses = {k: v.mean().item() for k, v in zip(keys, losses)}
-#
-#     return reduced_losses
-
-""" Tool to set for model by loading config files """
-
-
-def read_config(config_path):
-    """ read config file """
-    file = open(config_path, 'r')
-    lines = file.read().split('\n')
-    lines = [x for x in lines if x and not x.startswith('#')]
-    lines = [x.rstrip().lstrip() for x in lines]
-
-    return lines
-
-
-def parse_model_config(config_path):
-    """ Parse your model of configuration files and set module defines"""
-    lines = read_config(config_path)
-    module_configs = []
-
-    for line in lines:
-        if line.startswith('['):
-            layer_name = line[1:-1].rstrip()
-            if layer_name == "net":
-                continue
-            module_configs.append({})
-            module_configs[-1]['type'] = layer_name
-
-            if module_configs[-1]['type'] == 'convolutional':
-                module_configs[-1]['batch_normalize'] = 0
-        else:
-            if layer_name == "net":
-                continue
-            key, value = line.split("=")
-            value = value.strip()
-            if value.startswith('['):
-                module_configs[-1][key.rstrip()] = list(map(int, value[1:-1].rstrip().split(',')))
-            else:
-                module_configs[-1][key.rstrip()] = value.strip()
-
-    return module_configs
-
-
-""" If you want visualize_inference to fit your model, you need to implement below func."""
-
+    tensorboard_log_dir = Path(cfg.LOG_DIR) / dataset / model / \
+        (cfg_name + '_' + time_str)
+    print('=> creating {}'.format(tensorboard_log_dir))
+    tensorboard_log_dir.mkdir(parents=True, exist_ok=True)
+    
+    return logger, str(final_output_dir), str(tensorboard_log_dir)
 
 def visualize_inference(img, label, batch_size):
     """ Visualize Image Batch"""
