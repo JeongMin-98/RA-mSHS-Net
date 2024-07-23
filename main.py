@@ -6,24 +6,25 @@
 #
 # from model.model import check_model_build, run_visualize_feature_map_func, DeepNetwork
 import argparse
-
+import os
+import pprint
 
 from torchinfo import summary
 
 # The import statement below will be refactored soon.
 import _init_path
-from model import get_fcn
+from model import get_pose_net
 from config import cfg
 from config import update_config
 from utils.tools import check_device
-
+from utils.tools import create_logger
 
 def parse_args():
     desc = "Pytorch implementation of DeepNetwork"
     parser = argparse.ArgumentParser(description=desc)
 
     parser.add_argument('--cfg',
-                        default='experiments/test.yaml',
+                        default='experiments/pose_resnet.yaml',
                         help='experiment configure file name',
                         required=False,
                         type=str)
@@ -49,7 +50,6 @@ def parse_args():
                         help='prev Model directory',
                         type=str,
                         default='')
-
     args = parser.parse_args()
 
     return args
@@ -58,17 +58,12 @@ def parse_args():
 def run_fn(config):
     device = check_device()
 
+    # logger, final_output_dir, tb_log_dir = create_logger(
+    #     config, args.cfg, 'train'
+    # )
     # init model
-    model = get_fcn(config, is_train=True)
-
-    model_stat = summary(model,
-                         input_size=(1, 784),
-                         device='cuda',
-                         verbose=1,
-                         col_width=16,
-                         col_names=["kernel_size", "output_size", "num_params", "mult_adds"],
-                         row_settings=["var_names"])
-
+    model = get_pose_net(config, is_train=True)
+    
 
 """main"""
 
@@ -76,12 +71,25 @@ def run_fn(config):
 def main():
     args = parse_args()
     update_config(cfg, args)
+    
+    logger, final_output_dir, tb_log_dir = create_logger(
+        cfg, args.cfg, 'train')
+
+    logger.info(pprint.pformat(args))
+    logger.info(pprint.pformat(cfg))
+
+    # # cudnn related setting
+    # cudnn.benchmark = cfg.CUDNN.BENCHMARK
+    # torch.backends.cudnn.deterministic = config.CUDNN.DETERMINISTIC
+    # torch.backends.cudnn.enabled = config.CUDNN.ENABLED
+    
+    model = get_pose_net(cfg, is_train=True)
 
     # logger
     # create logger
 
     # run
-    run_fn(cfg)
+    # run_fn(cfg)
     # check_model_build(args=args)
     # run_visualize_feature_map_func(args)
 
