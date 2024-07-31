@@ -51,6 +51,10 @@ def visualize_keypoints(image_path, keypoints, heatmap_shape):
     plt.show()
 
 
+def crop_roi_image(image_path, keypoints, heatmap_shape, output_dir):
+    pass
+
+
 def main():
     args = arg_parser()
     update_config(cfg, args)
