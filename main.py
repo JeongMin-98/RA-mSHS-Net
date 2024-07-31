@@ -19,6 +19,7 @@ from config import update_config
 from utils.tools import check_device
 from utils.tools import create_logger
 
+
 def parse_args():
     desc = "Pytorch implementation of DeepNetwork"
     parser = argparse.ArgumentParser(description=desc)
@@ -63,7 +64,7 @@ def run_fn(config):
     # )
     # init model
     model = get_pose_net(config, is_train=True)
-    
+
 
 """main"""
 
@@ -71,7 +72,7 @@ def run_fn(config):
 def main():
     args = parse_args()
     update_config(cfg, args)
-    
+
     logger, final_output_dir, tb_log_dir = create_logger(
         cfg, args.cfg, 'train')
 
@@ -82,7 +83,7 @@ def main():
     # cudnn.benchmark = cfg.CUDNN.BENCHMARK
     # torch.backends.cudnn.deterministic = config.CUDNN.DETERMINISTIC
     # torch.backends.cudnn.enabled = config.CUDNN.ENABLED
-    
+
     model = get_pose_net(cfg, is_train=True)
 
     # logger

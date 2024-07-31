@@ -6,10 +6,10 @@ DATASET:
   DATASET: coco
   DATA_FORMAT: jpg
   HYBRID_JOINTS_TYPE: 
-  ROOT: 
+  ROOT: data/coco
   SELECT_DATA: False
-  TEST_SET: valid
-  TRAIN_SET: train
+  TEST_SET: Foot_New_Doctor2
+  TRAIN_SET: Foot_New_Doctor2
 DATA_DIR: 
 DEBUG:
   DEBUG: False

@@ -1,9 +1,16 @@
-import argparse
 import cv2
+import os
+
+import argparse
+
 import matplotlib.pyplot as plt
 from config import cfg, update_config
 from dataset.COCOformat import COCOEncoder, KeypointDB
 from pycocotools.coco import COCO
+
+
+def image_path(file_name):
+    return os.path.join(cfg.DATASET.ROOT, 'images', file_name)
 
 
 def arg_parser():
@@ -15,6 +22,13 @@ def arg_parser():
                         default='./test/',
                         help="output dataset directory"
                         )
+    parser.add_argument("--cfg",
+                        default='experiments/pose_resnet.yaml',
+                        help="configuration file")
+    parser.add_argument('opts',
+                        help="Modify config options using the command-line",
+                        default=None,
+                        nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
     return args
@@ -39,6 +53,7 @@ def visualize_keypoints(image_path, keypoints, heatmap_shape):
 
 def main():
     args = arg_parser()
+    update_config(cfg, args)
 
     origin_test_json = 'data/coco/annotations/Foot_New_Doctor2_test.json'
     origin = KeypointDB(args, origin_test_json, is_load_coco=True)
@@ -64,6 +79,7 @@ def main():
 
     # config file로 이미지 경로 불러오기
     for image_info, kp in zip(imgs, kps):
+        image_name = image_info['file_name']
         visualize_keypoints(image_info['file_name'], kp, heatmap_shape=None)
 
     return

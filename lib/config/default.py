@@ -22,6 +22,8 @@ _C.GPUS = 0
 _C.WORKERS = 4
 _C.PHASE = 'train'
 _C.RANK = 0
+_C.PRINT_FREQ = 0
+
 
 # Cudnn related params
 _C.CUDNN = CN()
@@ -98,14 +100,14 @@ def update_config(cfg, args):
     cfg.merge_from_file(args.cfg)
     cfg.merge_from_list(args.opts)
 
-    if args.modelDir:
-        cfg.OUTPUT_DIR = args.modelDir
-
-    if args.logDir:
-        cfg.LOG_DIR = args.logDir
-
-    if args.dataDir:
-        cfg.DATA_DIR = args.dataDir
+    # if args.modelDir:
+    #     cfg.OUTPUT_DIR = args.modelDir
+    #
+    # if args.logDir:
+    #     cfg.LOG_DIR = args.logDir
+    #
+    # if args.dataDir:
+    #     cfg.DATA_DIR = args.dataDir
 
     # cfg.DATASET.ROOT = os.path.join(
     #     cfg.DATA_DIR, cfg.DATASET.ROOT
