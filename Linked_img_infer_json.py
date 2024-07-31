@@ -1,7 +1,8 @@
 import argparse
 import cv2
 import matplotlib.pyplot as plt
-from lib.dataset.COCOformat import COCOEncoder, KeypointDB
+from config import cfg, update_config
+from dataset.COCOformat import COCOEncoder, KeypointDB
 from pycocotools.coco import COCO
 
 
