@@ -4,13 +4,13 @@ import os
 import argparse
 
 import matplotlib.pyplot as plt
-from config import cfg, update_config
-from dataset.COCOformat import COCOEncoder, KeypointDB
+from lib.config import cfg, update_config
+from lib.dataset.COCOformat import COCOEncoder, KeypointDB
 from pycocotools.coco import COCO
 
 
 def image_path(file_name):
-    return os.path.join(cfg.DATASET.ROOT, 'images', file_name)
+    return os.path.join(cfg.DATASET.ROOT, 'images', cfg.DATASET.TEST_SET, file_name)
 
 
 def arg_parser():
@@ -80,7 +80,8 @@ def main():
     # config file로 이미지 경로 불러오기
     for image_info, kp in zip(imgs, kps):
         image_name = image_info['file_name']
-        visualize_keypoints(image_info['file_name'], kp, heatmap_shape=None)
+        path = image_path(image_name)
+        visualize_keypoints(path, kp, heatmap_shape=None)
 
     return
 
