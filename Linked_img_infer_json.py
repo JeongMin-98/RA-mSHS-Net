@@ -1,6 +1,6 @@
-import cv2
 import os
-
+import cv2
+import copy
 import argparse
 
 import matplotlib.pyplot as plt
@@ -51,28 +51,32 @@ def visualize_keypoints(image_path, keypoints, heatmap_shape):
     plt.show()
 
 
-def crop_roi_image(image_path, keypoints, heatmap_shape, output_dir):
+def crop_roi_image(image_name, keypoints, heatmap_shape, output_dir, visualize=False):
     # Fixed ROI SIZE
-    image = cv2.imread(image_path)
+    image = cv2.imread(image_path(image_name))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    roi_size = 50
-    #
-    # plt.figure(figsize=(10, 10))
-    # plt.imshow(image)
+    result_image = copy.deepcopy(image)
+    roi_size = 30
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     for i, (x, y) in enumerate(keypoints):
         kx, ky = int(x), int(y)
         top_left = (max(0, kx - roi_size // 2), max(0, ky - roi_size // 2))
         bottom_right = (min(image.shape[1], kx + roi_size // 2), min(image.shape[0], ky + roi_size // 2))
 
-        cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+        roi = image[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        roi_filename = os.path.join(output_dir, f'{image_name}-roi-{i}.png')
 
-    # cv2.imshow('Keypoints with ROI', cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+        cv2.imwrite(roi_filename, cv2.cvtColor(roi, cv2.COLOR_RGB2BGR))
 
-    plt.figure(figsize=(10, 10))
-    plt.imshow(image)
-    plt.show()
+        cv2.rectangle(result_image, top_left, bottom_right, (0, 255, 0), 2)
+
+    if visualize:
+        plt.figure(figsize=(10, 10))
+        plt.imshow(result_image)
+        plt.show()
 
     return
 
@@ -106,9 +110,8 @@ def main():
     # config file로 이미지 경로 불러오기
     for image_info, kp in zip(imgs, kps):
         image_name = image_info['file_name']
-        path = image_path(image_name)
         # visualize_keypoints(path, kp, heatmap_shape=None)
-        crop_roi_image(path, kp, heatmap_shape=None, output_dir=None)
+        crop_roi_image(image_name, kp, heatmap_shape=None, output_dir=args.output_dir)
 
     return
 
