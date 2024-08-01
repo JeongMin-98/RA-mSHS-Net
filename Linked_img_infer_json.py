@@ -52,7 +52,29 @@ def visualize_keypoints(image_path, keypoints, heatmap_shape):
 
 
 def crop_roi_image(image_path, keypoints, heatmap_shape, output_dir):
-    pass
+    # Fixed ROI SIZE
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    roi_size = 50
+    #
+    # plt.figure(figsize=(10, 10))
+    # plt.imshow(image)
+    for i, (x, y) in enumerate(keypoints):
+        kx, ky = int(x), int(y)
+        top_left = (max(0, kx - roi_size // 2), max(0, ky - roi_size // 2))
+        bottom_right = (min(image.shape[1], kx + roi_size // 2), min(image.shape[0], ky + roi_size // 2))
+
+        cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+
+    # cv2.imshow('Keypoints with ROI', cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    plt.figure(figsize=(10, 10))
+    plt.imshow(image)
+    plt.show()
+
+    return
 
 
 def main():
@@ -85,7 +107,8 @@ def main():
     for image_info, kp in zip(imgs, kps):
         image_name = image_info['file_name']
         path = image_path(image_name)
-        visualize_keypoints(path, kp, heatmap_shape=None)
+        # visualize_keypoints(path, kp, heatmap_shape=None)
+        crop_roi_image(path, kp, heatmap_shape=None, output_dir=None)
 
     return
 
