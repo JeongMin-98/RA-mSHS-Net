@@ -135,3 +135,5 @@ checkpoint/
 logs/
 results/
 models/
+test/
+output/

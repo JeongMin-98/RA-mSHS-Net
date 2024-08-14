@@ -5,7 +5,7 @@ import argparse
 
 import matplotlib.pyplot as plt
 from lib.config import cfg, update_config
-from lib.dataset.COCOformat import COCOEncoder, KeypointDB
+from lib.dataset.COCOformat import COCOEncoder, ResultJson2KeypointDB
 from pycocotools.coco import COCO
 
 
@@ -15,9 +15,12 @@ def image_path(file_name):
 
 def arg_parser():
     parser = argparse.ArgumentParser(description="labelme2COCO")
-    parser.add_argument("--input_dir",
+    parser.add_argument("--json",
+                        default='output/retrained/coco/pose_resnet_50/384x288_d256x3_adam_lr1e-3-RHPE-Foot-N3-Doctor-noflip-test/results/keypoints_Foot_New_Doctor2_results.json',
+                        help="Inference Result JSON")
+    parser.add_argument("--input_dir", 
                         default='./test/',
-                        help="input annotated your directory")
+                        help="input dataset directory")
     parser.add_argument("--output_dir",
                         default='./test/',
                         help="output dataset directory"
@@ -25,6 +28,14 @@ def arg_parser():
     parser.add_argument("--cfg",
                         default='experiments/pose_resnet.yaml',
                         help="configuration file")
+    parser.add_argument("--vis",
+                        default=True,
+                        type=bool,
+                        help="Visualization Yes or No (Default: Yes)")
+    parser.add_argument("--crop", 
+                        default=False,
+                        type=bool,
+                        help="Crop ROI image (ROI is bbox with keypoint as center point), If you crop is False, visualize image automatically")
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
                         default=None,
@@ -34,8 +45,9 @@ def arg_parser():
     return args
 
 
-def visualize_keypoints(image_path, keypoints, heatmap_shape):
-    image = cv2.imread(image_path)
+def visualize_keypoints(image_name, keypoints, heatmap_shape, output_dir=None):
+    path = image_path(image_name)
+    image = cv2.imread(path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # print(image.shape)
 
@@ -49,7 +61,8 @@ def visualize_keypoints(image_path, keypoints, heatmap_shape):
         plt.scatter(x * ratio_w, y * ratio_h, s=100, c='red', marker='x')
         plt.text(x * ratio_w, y * ratio_h, str(i), fontsize=12, color='yellow')
     plt.show()
-
+    print("show plot")
+    return
 
 def crop_roi_image(image_name, keypoints, heatmap_shape, output_dir, visualize=False):
     # Fixed ROI SIZE
@@ -84,21 +97,19 @@ def crop_roi_image(image_name, keypoints, heatmap_shape, output_dir, visualize=F
 def main():
     args = arg_parser()
     update_config(cfg, args)
+    method = "visualize_keypoints" if args.crop is False else "crop_roi_image"
 
-    origin_test_json = 'data/coco/annotations/Foot_New_Doctor2_test.json'
-    origin = KeypointDB(args, origin_test_json, is_load_coco=True)
-    origin.load_coco_json()
+    origin_test_json = cfg.TEST.COCO_FILE
 
     origin_coco = COCO(origin_test_json)
 
-    infer_test_json = 'output/retrained/coco/pose_resnet_50/384x288_d256x3_adam_lr1e-3-RHPE-Foot-N3-Doctor-noflip-test/results/keypoints_Foot_New_Doctor2_results.json'
-    infer = KeypointDB(args, infer_test_json, is_load_coco=True)
-    infer.load_coco_json()
+    infer_test_json = args.json
+    infer = ResultJson2KeypointDB(args, infer_test_json)
 
     # keypoint alignment
     image_id = []
     kps = []
-    for db in infer.db:
+    for db in infer.db['annotations']:
         image_id.append(db['image_id'])
         kps_per_images = []
         for i in range(0, len(db['keypoints']), 3):
@@ -110,8 +121,9 @@ def main():
     # config file로 이미지 경로 불러오기
     for image_info, kp in zip(imgs, kps):
         image_name = image_info['file_name']
-        # visualize_keypoints(path, kp, heatmap_shape=None)
-        crop_roi_image(image_name, kp, heatmap_shape=None, output_dir=args.output_dir)
+        eval(f"{method}(image_name,kp,heatmap_shape=None,output_dir=args.output_dir)")
+        # visualize_keypoints(image_name, kp, heatmap_shape=None)
+        # crop_roi_image(image_name, kp, heatmap_shape=None, output_dir=args.output_dir)
 
     return
 
