@@ -2,12 +2,15 @@ import os
 import cv2
 import copy
 import argparse
+import time
 
 import matplotlib.pyplot as plt
 from lib.config import cfg, update_config
 from lib.dataset.COCOformat import COCOEncoder, ResultJson2KeypointDB
 from pycocotools.coco import COCO
 
+# # matplotlib interactive mode 
+# plt.ion()
 
 def image_path(file_name):
     return os.path.join(cfg.DATASET.ROOT, 'images', cfg.DATASET.TEST_SET, file_name)
@@ -61,7 +64,6 @@ def visualize_keypoints(image_name, keypoints, heatmap_shape, output_dir=None):
         plt.scatter(x * ratio_w, y * ratio_h, s=100, c='red', marker='x')
         plt.text(x * ratio_w, y * ratio_h, str(i), fontsize=12, color='yellow')
     plt.show()
-    print("show plot")
     return
 
 def crop_roi_image(image_name, keypoints, heatmap_shape, output_dir, visualize=False):
@@ -89,7 +91,8 @@ def crop_roi_image(image_name, keypoints, heatmap_shape, output_dir, visualize=F
     if visualize:
         plt.figure(figsize=(10, 10))
         plt.imshow(result_image)
-        plt.show()
+        time.sleep(5)
+        plt.close()
 
     return
 

@@ -39,6 +39,7 @@ OUTPUT_DIR: output
 PHASE: train
 TEST:
   BATCH_SIZE_PER_GPU: 32
+  COCO_FILE: 'data/coco/annotations/Foot_New_Doctor2_test.json'
 TRAIN:
   BATCH_SIZE_PER_GPU: 32
   BEGIN_EPOCH: 0
