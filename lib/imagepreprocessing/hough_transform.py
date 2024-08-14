@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 #%%  read image
 
-img = Image.open('output.png').convert('L')
+img = Image.open('../../image/get_gaussian_blur_output.png').convert('L')
 # img = Image.open('test.png').convert('L')
 bin_img = np.array(img)
 bin_img[bin_img>0] = 1
@@ -62,7 +62,7 @@ plt.show()
 
 #%% take intersection points in hough space
 
-def select_lines(hough_space, rad_theta, rho, num=10, threshold=20):
+def select_lines(hough_space, rad_theta, rho, num=20, threshold=10):
     
     hough = hough_space.copy()
     idx = []
@@ -85,7 +85,7 @@ def select_lines(hough_space, rad_theta, rho, num=10, threshold=20):
             
     return idx, element_rho, element_theta
         
-idx, element_rho, element_theta = select_lines(hough_space, rad_theta, rho, num=10, threshold=5)
+idx, element_rho, element_theta = select_lines(hough_space, rad_theta, rho, num=10, threshold=10)
 
 plt.figure(figsize=(6,9))
 str_hough_space = hough_space*3 #3, 200
@@ -99,21 +99,38 @@ plt.axis('off')
 plt.show()
 
 #%% draw lines
+# 기울기와 절편 계산
+epsilon = 1e-10  # 작은 값으로 매우 작은 sin 값을 감지하여 처리
 
-m = - np.cos(element_theta)/np.sin(element_theta)
-b = element_rho / np.sin(element_theta)
+# sin(theta)가 0에 가까운지 확인하고, 이에 따라 기울기를 계산
+m = np.zeros_like(element_theta)
+b = np.zeros_like(element_theta)
+
+# sin(element_theta) != 0 인 경우
+non_vertical_mask = np.abs(np.sin(element_theta)) > epsilon
+m[non_vertical_mask] = -np.cos(element_theta[non_vertical_mask]) / np.sin(element_theta[non_vertical_mask])
+b[non_vertical_mask] = element_rho[non_vertical_mask] / np.sin(element_theta[non_vertical_mask])
+
+# sin(element_theta) == 0 인 경우 (수직선 처리)
+m[~non_vertical_mask] = np.inf
+b[~non_vertical_mask] = element_rho[~non_vertical_mask]
 
 plt.figure()
 plt.imshow(bin_img, cmap='gray')
 for i in range(len(m)):
-    for c in range(C):
-        y = int(m[i]*c+b[i])
-        if y >= 0 and y < R:
-            plt.plot(c, y, marker='.', color='red')
-    for r in range(R):
-        x = int((r-b[i])/m[i])
-        if x >=0 and x < C:
-            plt.plot(x, r, marker='.', color='red')
+    if m[i] == np.inf:
+        x = int(element_rho[i])
+        if x >= 0 and x < C:
+            plt.plot([x, x], [0, R], color='red')
+    else:
+        for c in range(C):
+            y = int(m[i]*c+b[i])
+            if y >= 0 and y < R:
+                plt.plot(c, y, marker='.', color='red')
+        for r in range(R):
+            x = int((r-b[i])/m[i])
+            if x >=0 and x < C:
+                plt.plot(x, r, marker='.', color='red')
 plt.title('Detecting lines')
 plt.show()
 
