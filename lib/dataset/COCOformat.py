@@ -42,7 +42,7 @@ class COCOEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class COCO:
+class COCO(PyCOCO):
     def __init__(self, annotation_file) -> None:
         super.__init__(annotation_file)
     
@@ -117,6 +117,11 @@ class KeypointDB:
     
     def add_annotations(self, annotations):
         self.db['annotations'].extend(annotations)
+    
+    def get_keypoints(self, image_id):
+        annotations = self.db['annotations']
+        keypoints = [ann['keypoints'] for ann in annotations if ann['image_id'] == image_id]
+        return keypoints   
 
     def saver(self):
         with open(osp.join(self.output_dir, "annotations.json"), 'w') as f:
@@ -129,11 +134,7 @@ class KeypointDBAdapter(KeypointDB):
     def __init__(self, args, json_file=None, is_load_coco=False):
         super().__init__(args, json_file, is_load_coco)
         self.load_coco_json()
-    def get_keypoints(self, image_id):
-        annotations = self.db['annotations']
-        keypoints = [ann['keypoints'] for ann in annotations if ann['image_id'] == image_id]
-        return keypoints
-
+    
 
 class ResultJson2KeypointDB(KeypointDB):
     def __init__(self, args, result_json):

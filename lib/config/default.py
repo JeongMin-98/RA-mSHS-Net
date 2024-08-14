@@ -86,6 +86,7 @@ _C.TEST = CN()
 
 # size of images for each device
 _C.TEST.BATCH_SIZE_PER_GPU = 32
+_C.TEST.COCO_FILE = ''
 
 # debug
 _C.DEBUG = CN()
